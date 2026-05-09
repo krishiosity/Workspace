@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff, LayoutDashboard } from "lucide-react";
 
 const STORAGE_KEY = "widget-dashboard-auth";
-const PASSWORD = "Faith123$#@";
+const PASSWORD = process.env.NEXT_PUBLIC_GATE_PASSWORD ?? "";
 
 function hashPassword(pw: string): string {
   // Simple hash for client-side gating — not meant for production security

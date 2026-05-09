@@ -10,30 +10,19 @@ import {
   Plus,
   Search,
   X,
-  Image,
-  Bot,
-  Eye,
-  Share2,
-  Users,
-  StickyNote,
-  Timer,
-  Terminal,
 } from "lucide-react";
 import { useDashboardStore } from "@/lib/store";
 import { getAddableWidgetDefinitions } from "@/lib/widget-registry";
+import { iconMap } from "@/lib/icon-map";
 import WidgetGrid from "./WidgetGrid";
 
-const iconMap: Record<string, React.ReactNode> = {
-  Image: <Image className="h-5 w-5" />,
-  Bot: <Bot className="h-5 w-5" />,
-  Eye: <Eye className="h-5 w-5" />,
-  Share2: <Share2 className="h-5 w-5" />,
-  Users: <Users className="h-5 w-5" />,
-  StickyNote: <StickyNote className="h-5 w-5" />,
-  Timer: <Timer className="h-5 w-5" />,
-  Terminal: <Terminal className="h-5 w-5" />,
-  Plus: <Plus className="h-5 w-5" />,
-};
+function useIsMac() {
+  const [isMac, setIsMac] = useState(true);
+  useEffect(() => {
+    setIsMac(navigator.platform.toUpperCase().includes("MAC"));
+  }, []);
+  return isMac;
+}
 
 export default function DashboardShell() {
   const theme = useDashboardStore((s) => s.theme);
@@ -42,6 +31,7 @@ export default function DashboardShell() {
   const addWidget = useDashboardStore((s) => s.addWidget);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [paletteSearch, setPaletteSearch] = useState("");
+  const isMac = useIsMac();
 
   // Apply theme to html element
   useEffect(() => {
@@ -53,7 +43,7 @@ export default function DashboardShell() {
     }
   }, [theme]);
 
-  // Cmd+K shortcut
+  // Cmd+K / Ctrl+K shortcut
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -117,7 +107,7 @@ export default function DashboardShell() {
             <Plus className="h-3.5 w-3.5" />
             Add Widget
             <kbd className="ml-1 rounded bg-white/10 px-1 py-0.5 font-mono text-[10px] text-white/50 dark:bg-white/[0.06] dark:text-neutral-500">
-              ⌘K
+              {isMac ? "⌘" : "Ctrl+"}K
             </kbd>
           </button>
 
@@ -125,7 +115,7 @@ export default function DashboardShell() {
           <button
             onClick={toggleTheme}
             className="rounded-lg p-2 text-white/60 transition-all hover:bg-white/10 hover:text-white dark:text-neutral-500 dark:hover:bg-white/[0.06] dark:hover:text-neutral-300"
-            title="Toggle theme"
+            aria-label="Toggle theme"
           >
             {theme === "light" ? (
               <Moon className="h-4 w-4" />
@@ -138,7 +128,7 @@ export default function DashboardShell() {
           <button
             onClick={resetDashboard}
             className="rounded-lg p-2 text-white/60 transition-all hover:bg-white/10 hover:text-white dark:text-neutral-500 dark:hover:bg-white/[0.06] dark:hover:text-neutral-300"
-            title="Reset layout"
+            aria-label="Reset layout"
           >
             <RotateCcw className="h-4 w-4" />
           </button>
@@ -178,6 +168,7 @@ export default function DashboardShell() {
               <button
                 onClick={() => setCommandPaletteOpen(false)}
                 className="rounded p-1 text-[#475569] hover:text-[#0f172a] dark:text-neutral-500 dark:hover:text-neutral-300"
+                aria-label="Close command palette"
               >
                 <X className="h-4 w-4" />
               </button>

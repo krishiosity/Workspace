@@ -1,17 +1,28 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { type WidgetProps } from "@/types/widgets";
 
 export default function Notes({ id, settings, onUpdateSettings }: WidgetProps) {
   const [content, setContent] = useState(
     (settings.content as string) || ""
   );
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setContent(e.target.value);
-      onUpdateSettings({ content: e.target.value });
+      const value = e.target.value;
+      setContent(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        onUpdateSettings({ content: value });
+      }, 500);
     },
     [onUpdateSettings]
   );

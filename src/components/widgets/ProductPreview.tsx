@@ -397,19 +397,22 @@ export default function ProductPreview({ id, settings, onUpdateSettings }: Widge
                     autoFocus
                   />
                   <input
-                    type="text"
+                    type="url"
                     placeholder="https://..."
                     value={customUrl}
                     onChange={(e) => setCustomUrl(e.target.value)}
                     className="w-full rounded-lg border border-blue-200 bg-blue-50/50 px-2 py-1 text-xs text-[#0f172a] outline-none focus:border-blue-300 dark:border-neutral-500/30 dark:bg-white/[0.04] dark:text-neutral-200"
                   />
+                  {customUrl.trim() && !customUrl.trim().startsWith("https://") && (
+                    <p className="text-[10px] text-red-500">URL must start with https://</p>
+                  )}
                   <button
                     onClick={() => {
-                      if (customName.trim() && customUrl.trim()) {
+                      if (customName.trim() && customUrl.trim() && customUrl.trim().startsWith("https://")) {
                         addPlugin(customName.trim(), customUrl.trim());
                       }
                     }}
-                    disabled={!customName.trim() || !customUrl.trim()}
+                    disabled={!customName.trim() || !customUrl.trim() || !customUrl.trim().startsWith("https://")}
                     className="rounded-lg bg-[#0f172a] px-2 py-1 text-xs font-medium text-white transition-all hover:bg-[#0f172a]/90 disabled:opacity-40 dark:bg-white dark:text-black dark:hover:bg-neutral-200"
                   >
                     Add

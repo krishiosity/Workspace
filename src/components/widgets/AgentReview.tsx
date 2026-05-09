@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   Terminal,
   Circle,
@@ -757,9 +757,13 @@ export default function AgentReview({ id, settings }: WidgetProps) {
     ? MOCK_AGENTS.filter((a) => a.model === filterModel)
     : MOCK_AGENTS;
 
-  const allLogs = MOCK_AGENTS.flatMap((a) => a.logs)
-    .filter((l) => !filterModel || l.model === filterModel)
-    .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+  const allLogs = useMemo(
+    () =>
+      MOCK_AGENTS.flatMap((a) => a.logs)
+        .filter((l) => !filterModel || l.model === filterModel)
+        .sort((a, b) => a.timestamp.localeCompare(b.timestamp)),
+    [filterModel]
+  );
 
   const toggleAgent = (agentId: string) => {
     setExpandedAgents((prev) => {

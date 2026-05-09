@@ -18,6 +18,7 @@ export default function WidgetShell({
   onRemove,
   onMaximize,
   onCollapse,
+  onTitleChange,
   isCollapsed,
   isMaximized,
   headerExtra,
@@ -29,17 +30,23 @@ export default function WidgetShell({
     setEditingTitle(true);
   }, []);
 
-  const handleTitleBlur = useCallback(() => {
+  const commitTitle = useCallback(() => {
     setEditingTitle(false);
-  }, []);
+    if (localTitle !== title && onTitleChange) {
+      onTitleChange(id, localTitle);
+    }
+  }, [localTitle, title, id, onTitleChange]);
 
   const handleTitleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" || e.key === "Escape") {
+      if (e.key === "Enter") {
+        commitTitle();
+      } else if (e.key === "Escape") {
+        setLocalTitle(title);
         setEditingTitle(false);
       }
     },
-    []
+    [commitTitle, title]
   );
 
   // Escape key exits maximized mode
@@ -86,7 +93,7 @@ export default function WidgetShell({
             type="text"
             value={localTitle}
             onChange={(e) => setLocalTitle(e.target.value)}
-            onBlur={handleTitleBlur}
+            onBlur={commitTitle}
             onKeyDown={handleTitleKeyDown}
             className="min-w-0 flex-1 rounded bg-[#f5f0f1] px-1 text-sm font-medium text-[#0f172a] outline-none ring-1 ring-blue-400 dark:bg-neutral-800 dark:text-white dark:ring-neutral-400"
             autoFocus
@@ -109,7 +116,7 @@ export default function WidgetShell({
           <button
             onClick={() => onCollapse(id)}
             className="rounded-md p-1 text-[#475569] transition-all hover:bg-blue-50 hover:text-[#0f172a] dark:text-neutral-500 dark:hover:bg-white/[0.06] dark:hover:text-neutral-300"
-            title={isCollapsed ? "Expand" : "Collapse"}
+            aria-label={isCollapsed ? "Expand" : "Collapse"}
           >
             {isCollapsed ? (
               <ChevronDown className="h-3.5 w-3.5" />
@@ -120,7 +127,7 @@ export default function WidgetShell({
           <button
             onClick={() => onMaximize(id)}
             className="rounded-md p-1 text-[#475569] transition-all hover:bg-blue-50 hover:text-[#0f172a] dark:text-neutral-500 dark:hover:bg-white/[0.06] dark:hover:text-neutral-300"
-            title={isMaximized ? "Restore" : "Maximize"}
+            aria-label={isMaximized ? "Restore" : "Maximize"}
           >
             {isMaximized ? (
               <Minimize2 className="h-3.5 w-3.5" />
@@ -131,7 +138,7 @@ export default function WidgetShell({
           <button
             onClick={() => onRemove(id)}
             className="rounded-md p-1 text-[#475569] transition-all hover:bg-red-50 hover:text-red-400 dark:text-neutral-500 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-            title="Remove widget"
+            aria-label="Remove widget"
           >
             <X className="h-3.5 w-3.5" />
           </button>

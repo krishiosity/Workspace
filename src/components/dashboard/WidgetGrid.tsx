@@ -2,9 +2,11 @@
 
 import React, { useMemo, useCallback } from "react";
 import { ResponsiveGridLayout, useContainerWidth, verticalCompactor } from "react-grid-layout";
+import type { Layout, ResponsiveLayouts } from "react-grid-layout";
 import { useDashboardStore } from "@/lib/store";
 import { getWidgetDefinition } from "@/lib/widget-registry";
 import WidgetShell from "./WidgetShell";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480 };
 const COLS = { lg: 12, md: 10, sm: 6, xs: 4 };
@@ -23,16 +25,21 @@ export default function WidgetGrid() {
   const { width: containerWidth, mounted, containerRef } = useContainerWidth();
 
   const handleLayoutChange = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (_layout: any, allLayouts: any) => {
-      // Convert readonly layouts to mutable for our store
-      const mutableLayouts: Record<string, any[]> = {};
+    (_layout: Layout, allLayouts: ResponsiveLayouts) => {
+      const mutableLayouts: Record<string, unknown[]> = {};
       for (const [key, value] of Object.entries(allLayouts)) {
         mutableLayouts[key] = Array.isArray(value) ? [...value] : [];
       }
-      updateLayout(mutableLayouts);
+      updateLayout(mutableLayouts as Parameters<typeof updateLayout>[0]);
     },
     [updateLayout]
+  );
+
+  const handleTitleChange = useCallback(
+    (id: string, title: string) => {
+      updateWidgetSettings(id, { customTitle: title });
+    },
+    [updateWidgetSettings]
   );
 
   const widgetElements = useMemo(() => {
@@ -45,25 +52,29 @@ export default function WidgetGrid() {
         collapsed: false,
         maximized: false,
       };
+      const displayTitle = (widget.settings.customTitle as string) || definition.name;
 
       return (
         <div key={widget.id} className="relative">
           <WidgetShell
             id={widget.id}
-            title={definition.name}
+            title={displayTitle}
             onRemove={removeWidget}
             onMaximize={toggleMaximize}
             onCollapse={toggleCollapse}
+            onTitleChange={handleTitleChange}
             isCollapsed={uiState.collapsed}
             isMaximized={uiState.maximized}
           >
-            <Component
-              id={widget.id}
-              settings={widget.settings}
-              onUpdateSettings={(settings) =>
-                updateWidgetSettings(widget.id, settings)
-              }
-            />
+            <ErrorBoundary>
+              <Component
+                id={widget.id}
+                settings={widget.settings}
+                onUpdateSettings={(settings) =>
+                  updateWidgetSettings(widget.id, settings)
+                }
+              />
+            </ErrorBoundary>
           </WidgetShell>
         </div>
       );
@@ -75,6 +86,7 @@ export default function WidgetGrid() {
     toggleMaximize,
     toggleCollapse,
     updateWidgetSettings,
+    handleTitleChange,
   ]);
 
   if (!mounted) {

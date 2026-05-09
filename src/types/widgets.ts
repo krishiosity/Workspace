@@ -29,6 +29,7 @@ export interface WidgetShellProps {
   onRemove: (id: string) => void;
   onMaximize: (id: string) => void;
   onCollapse: (id: string) => void;
+  onTitleChange?: (id: string, title: string) => void;
   isCollapsed: boolean;
   isMaximized: boolean;
   headerExtra?: React.ReactNode;

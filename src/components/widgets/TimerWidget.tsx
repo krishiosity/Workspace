@@ -23,7 +23,7 @@ export default function TimerWidget({ id, settings }: WidgetProps) {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (isRunning && timeLeft > 0) {
+    if (isRunning) {
       intervalRef.current = setInterval(() => {
         setTimeLeft((t) => {
           if (t <= 1) {
@@ -37,7 +37,7 @@ export default function TimerWidget({ id, settings }: WidgetProps) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, timeLeft]);
+  }, [isRunning]);
 
   const handleToggle = useCallback(() => {
     setIsRunning((r) => !r);
