@@ -4,20 +4,6 @@ import React, { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff, LayoutDashboard } from "lucide-react";
 
 const STORAGE_KEY = "widget-dashboard-auth";
-const PASSWORD = process.env.NEXT_PUBLIC_GATE_PASSWORD ?? "";
-
-function hashPassword(pw: string): string {
-  // Simple hash for client-side gating — not meant for production security
-  let hash = 0;
-  for (let i = 0; i < pw.length; i++) {
-    const char = pw.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash |= 0;
-  }
-  return hash.toString(36);
-}
-
-const VALID_HASH = hashPassword(PASSWORD);
 
 export default function PasswordGate({
   children,
@@ -30,25 +16,43 @@ export default function PasswordGate({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(false);
   const [shaking, setShaking] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === VALID_HASH) {
+    if (saved === "authenticated") {
       setAuthenticated(true);
     }
     setLoading(false);
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (hashPassword(password) === VALID_HASH) {
-      localStorage.setItem(STORAGE_KEY, VALID_HASH);
-      setAuthenticated(true);
-    } else {
+    if (submitting) return;
+    setSubmitting(true);
+
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem(STORAGE_KEY, "authenticated");
+        setAuthenticated(true);
+      } else {
+        setError(true);
+        setShaking(true);
+        setTimeout(() => setShaking(false), 500);
+        setTimeout(() => setError(false), 3000);
+      }
+    } catch {
       setError(true);
-      setShaking(true);
-      setTimeout(() => setShaking(false), 500);
       setTimeout(() => setError(false), 3000);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -109,6 +113,7 @@ export default function PasswordGate({
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#475569] transition-colors hover:text-[#0f172a] dark:text-neutral-500 dark:hover:text-neutral-300"
+              aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
                 <EyeOff className="h-4 w-4" />
@@ -126,9 +131,10 @@ export default function PasswordGate({
 
           <button
             type="submit"
-            className="w-full rounded-xl bg-[#0f172a] py-2.5 text-sm font-medium text-white transition-all hover:bg-[#1e293b] active:bg-[#0c1220] dark:bg-white dark:text-black dark:hover:bg-neutral-200 dark:active:bg-neutral-300"
+            disabled={submitting}
+            className="w-full rounded-xl bg-[#0f172a] py-2.5 text-sm font-medium text-white transition-all hover:bg-[#1e293b] active:bg-[#0c1220] disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-neutral-200 dark:active:bg-neutral-300"
           >
-            Unlock Dashboard
+            {submitting ? "Checking..." : "Unlock Dashboard"}
           </button>
         </form>
       </div>
